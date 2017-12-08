@@ -1,0 +1,17 @@
+{
+  "name": "fb-messenger-terminal",
+  "version": "1.0.0",
+  "description": "fb messenger terminal client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Edwin Javier",
+  "license": "ISC",
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "facebook-chat-api": "^1.4.0",
+    "inquirer": "^4.0.1",
+    "underscore": "^1.8.3"
+  }
+}
