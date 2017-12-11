@@ -83,9 +83,16 @@ var text = blessed.textbox({
   tags: true,
 });
 
-var _login = {};
+var _login = {
+  username: '',
+  password: ''
+};
 
 var _api;
+
+var clearValue = function(cb) {
+    cb(text.clearValue());
+}
 
 usernamePrompt.readInput(function() {});
 
@@ -94,18 +101,17 @@ usernamePrompt.on('submit', (value) => {
   usernameLabel.hide();
   usernamePrompt.hide();
   passwordLabel.show();
-  //passwordPrompt.show();
+  passwordPrompt.show();
   screen.render();
   passwordPrompt.readInput(function() {});
 
 });
 
 passwordPrompt.on('submit', (value) => {
-
-    _login.password = value;
+    //_login.password = value;
 
     passwordLabel.hide();
-    //passwordPrompt.hide();
+    passwordPrompt.hide();
     logger.show();
     text.show();
     screen.render();
@@ -113,7 +119,7 @@ passwordPrompt.on('submit', (value) => {
     logger.log('logging in...');
 
     login({email: _login.username, password: _login.password}, {logLevel: 'silent'}, (err, api) => {
-    		    if(err) return console.error(err);
+    		    if(err) return logger.log('unable to login: ' + err.error);
               logger.log('successfully logged in!');
       		    api.listen((err, message) => {
                   api.getUserInfo(message.senderID, (err, ret) => {
@@ -134,41 +140,92 @@ passwordPrompt.on('submit', (value) => {
 
 text.on('submit', (value) => {
   var command = value.split(' ');
-  text.clearValue();
 
-  if (command[0]==='/l')
-    _api.getFriendsList(function(err, arr) {
-      _.pluck(arr, 'vanity').forEach(function(fullname) {
-        logger.log(fullname);
+  clearValue(function(value) {
+    if (command[0]==='/list') {
+      logger.log('retrieving friend list...');
+      _api.getFriendsList(function(err, arr) {
+        _.pluck(arr, 'vanity').forEach(function(vanity) {
+          logger.log(vanity);
+        });
       });
-    });
+    }
 
-  if (command[0].indexOf('/pm')>-1&&command[1]) {
-    active = command[1];
-    text.setValue('/pm ' +active+' ');
-    logger.log(active);
-    if (command.length==3) {
-      _api.getUserID(active, function(err, obj) {
-        if (obj.length==1) {
-          screen.render();
-          _api.sendMessage(command[2], obj[0].userID, function(err, messageInfo) {
-            if (err) logger.log('your message to ' + messageInfo.threadID +' was not sent.');
+    if (command[0].indexOf('/find')>-1&&command[1]) {
+      logger.log('searching for users...');
+      _api.getUserID(command[1], (err, data) => {
+        if(err) return logger.log(err);
+        //logger.log(JSON.stringify(data));
+
+        var userIDs = _.pluck(data, 'userID');
+
+        _api.getUserInfo(userIDs, (err, ret) => {
+          if(err) return logger.log(err);
+
+          _.pluck(ret, 'vanity').forEach(function(vanity) {
+            logger.log(vanity);
           });
-        }
+        });
+
       });
     }
-    if (command.length==2) {
-      text.setValue('/pm ' +active+' ');
-      screen.render();
+
+    if (command[0].indexOf('/pm')>-1&&command[1]) {
+
+      //logger.log(active);
+      if (command.length>2 && command[2]!=='') {
+        var _msg = command.slice();
+        _msg.splice(0, 2);
+        var msg = _msg.toString().replace(new RegExp(',', 'g'), ' ');
+
+        logger.log('you: ' + msg);
+        active = command[1];
+        text.setValue('/pm ' + active +' ');
+
+        _api.getUserID(active, function(err, obj) {
+          if (obj.length==1) {
+            screen.render();
+            _api.sendMessage(msg, obj[0].userID, function(err, messageInfo) {
+              if (err) logger.log('your message to ' + messageInfo.threadID + ' was not sent.');
+            });
+          }
+        });
+      } else if (active) {
+        text.setValue('/pm ' +active+' ');
+        screen.render();
+      }
+
     }
 
-  }
+    if (command[0]==='/quit') {
+      process.exit(0);
+    }
 
-  text.readInput(function() {});
+    text.readInput(function() {});
+  });
+
+
 });
 
-screen.key('escape', function() {
-  screen.destroy();
+passwordPrompt.key([
+  'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+  'S-a','S-b','S-c','S-d','S-e','S-f','S-g','S-h','S-i','S-j','S-k','S-l','S-m','S-n','S-o','S-p','S-q','S-r','S-s','S-t','S-u','S-v','S-w','S-x','S-y','S-z',
+  '1','2','3','4','5','6','7','8','9','0',
+  '!','@','#','$','%','^','&','*','(',')'], function(key) {
+  var _mask = passwordPrompt.getValue().split('');
+  var mask = '';
+
+  _mask.forEach(function(char) {
+    mask = mask+'*';
+  });
+
+  passwordPrompt.setValue(mask);
+  _login.password = _login.password+key;
+  screen.render();
+});
+
+screen.key('enter', function() {
+  text.readInput(function() {});
 });
 
 screen.render();
