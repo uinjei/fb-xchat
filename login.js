@@ -60,12 +60,6 @@ passwordPrompt.on('submit', (value) => {
             main.setApi(api);
 
             main.logger.log('successfully logged in!');
-    		    api.listen((err, message) => {
-                api.getUserInfo(message.senderID, (err, ret) => {
-                    if(err) return main.logger.log(err);
-                    main.logger.log(ret[message.senderID].vanity + ': {white-fg}' + message.body+'{/}');
-                });
-    		    });
 
             //main._api = api;
 

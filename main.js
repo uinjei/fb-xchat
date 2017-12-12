@@ -44,6 +44,21 @@ var clearValue = function(cb) {
 
 var setApi = function(api) {
   _api = api;
+  _api.setOptions({listenEvents: true, selfListen: true});
+  _api.listen((err, event) => {
+    //logger.log('ret: '+JSON.stringify(event));
+      if (event.type==='message') {
+        api.getUserInfo(event.senderID, (err, ret) => {
+            if(err) return logger.log(err);
+            logger.log(ret[event.senderID].vanity + ': {white-fg}' + event.body+'{/}');
+        });
+      } else if (event.type==='typ') {
+        api.getUserInfo(event.userID, (err, ret) => {
+            if(err) return logger.log(err);
+            logger.log('{white-fg}'+ret[event.userID].vanity + ' is typing...{/}');
+        });
+      }
+  });
 };
 
 text.on('submit', (value) => {
@@ -87,7 +102,7 @@ text.on('submit', (value) => {
         var msg = _msg.toString().replace(new RegExp(',', 'g'), ' ');
 
         active = command[1];
-        logger.log('you to '+active+': ' + '{blue-fg}'+msg+'{/}');
+        //logger.log('you to '+active+': ' + '{blue-fg}'+msg+'{/}');
         text.setValue('/pm ' + active +' ');
 
         _api.getUserID(active, function(err, obj) {
