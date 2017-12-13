@@ -3,8 +3,6 @@ var blessed = require('blessed');
 var screen = require('./screen');
 var _ = require('underscore');
 
-var emoji = require('node-emoji')
-
 var _api;
 
 var logger = blessed.log({
@@ -55,7 +53,7 @@ var setApi = function(api) {
             if (event.senderID===api.getCurrentUserID()) {
               _api.getUserInfo(event.threadID, (err, to) => {
                   if(err) return logger.log(err);
-                  logger.log('message: '+JSON.stringify(event));
+                  //console.log('message: '+JSON.stringify(event));
                   logger.log('you to {bold}'+to[event.threadID].vanity+'{/bold}: {blue-fg}' + event.body+'{/}');
               });
             } else {
@@ -81,17 +79,23 @@ var setApi = function(api) {
 
 text.on('submit', (value) => {
 
-  //logger.log('emoji: '+ emoji.get('woman-heart-woman'));
-
   var command = value.split(' ');
 
   clearValue(function(value) {
     if (command[0]==='/list') {
       logger.log('retrieving friend list...');
-      _api.getFriendsList(function(err, arr) {
-        _.pluck(arr, 'vanity').forEach(function(vanity) {
-          logger.log(vanity);
+      _api.getFriendsList(function(err, friends) {
+        // _.pluck(friends, 'vanity').forEach(function(vanity) {
+        //   logger.log(vanity);
+        // });
+
+        _.map(friends, function(friend) {
+                return { fullName: friend.fullName, vanity: friend.vanity };
+            }
+        ).forEach(function(friend) {
+          logger.log(friend.fullName+'('+friend.vanity+')');
         });
+
       });
     }
 
@@ -103,12 +107,22 @@ text.on('submit', (value) => {
 
         var userIDs = _.pluck(data, 'userID');
 
-        _api.getUserInfo(userIDs, (err, ret) => {
+        _api.getUserInfo(userIDs, (err, users) => {
           if(err) return logger.log(err);
 
-          _.pluck(ret, 'vanity').forEach(function(vanity) {
-            logger.log(vanity);
+          // _.pluck(ret, 'vanity').forEach(function(vanity) {
+          //   logger.log(vanity);
+          // });
+
+          //logger.log(JSON.stringify(users));
+
+          _.map(users, function(user) {
+                  return { name: user.name, vanity: user.vanity };
+              }
+          ).forEach(function(user) {
+            logger.log(user.name+'('+user.vanity+')');
           });
+
         });
 
       });

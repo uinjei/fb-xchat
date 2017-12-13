@@ -5,7 +5,8 @@ var screen = blessed.screen({
   smartCSR: true,
   autoPadding: true,
   warnings: true,
-  title: 'fb xchat'
+  title: 'fb xchat',
+  fullUnicode: true
 });
 
 var layout = blessed.layout({
