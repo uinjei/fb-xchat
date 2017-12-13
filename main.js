@@ -3,6 +3,8 @@ var blessed = require('blessed');
 var screen = require('./screen');
 var _ = require('underscore');
 
+var emoji = require('node-emoji')
+
 var _api;
 
 var logger = blessed.log({
@@ -48,20 +50,39 @@ var setApi = function(api) {
   _api.listen((err, event) => {
     //logger.log('ret: '+JSON.stringify(event));
       if (event.type==='message') {
-        api.getUserInfo(event.senderID, (err, ret) => {
+        _api.getUserInfo(event.senderID, (err, sender) => {
             if(err) return logger.log(err);
-            logger.log(ret[event.senderID].vanity + ': {white-fg}' + event.body+'{/}');
+            if (event.senderID===api.getCurrentUserID()) {
+              _api.getUserInfo(event.threadID, (err, to) => {
+                  if(err) return logger.log(err);
+                  logger.log('message: '+JSON.stringify(event));
+                  logger.log('you to {bold}'+to[event.threadID].vanity+'{/bold}: {blue-fg}' + event.body+'{/}');
+              });
+            } else {
+              logger.log('{bold}'+sender[event.senderID].vanity + '{/bold}: {white-fg}' + event.body+'{/}');
+            }
+
         });
       } else if (event.type==='typ') {
-        api.getUserInfo(event.userID, (err, ret) => {
-            if(err) return logger.log(err);
-            logger.log('{white-fg}'+ret[event.userID].vanity + ' is typing...{/}');
+        //logger.log('event: '+JSON.stringify(event));
+        // _api.getUserInfo(event.userID, (err, user) => {
+        //     if(err) return logger.log(err);
+        //     logger.log('{bold}'+user[event.userID].vanity + '{/bold} is typing...');
+        // });
+      } else if (event.type==='read_receipt') {
+        //logger.log('event: '+JSON.stringify(event));
+        _api.getUserInfo(event.reader, (err, user) => {
+            //if(err) return logger.log(err);
+            logger.log('{bold}'+user[event.reader].vanity + '{/bold} seen you message.');
         });
       }
   });
 };
 
 text.on('submit', (value) => {
+
+  //logger.log('emoji: '+ emoji.get('woman-heart-woman'));
+
   var command = value.split(' ');
 
   clearValue(function(value) {

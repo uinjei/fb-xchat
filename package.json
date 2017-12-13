@@ -12,6 +12,7 @@
     "blessed": "^0.1.81",
     "facebook-chat-api": "^1.4.0",
     "inquirer": "^4.0.1",
+    "node-emoji": "^1.8.1",
     "underscore": "^1.8.3"
   }
 }
